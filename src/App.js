@@ -1,47 +1,18 @@
 import React, { useEffect, useState } from "react";
 import './styles/App.css';
-import twitterLogo from './assets/twitter-logo.svg';
+import 'bootstrap/dist/css/bootstrap.css';
+import Spinner from 'react-bootstrap/Spinner';
+import profile from './assets/profilepic.webp';
 import { ethers } from "ethers";
 import myEpicNft from './utils/MyEpicNFT.json';
 
-const TWITTER_HANDLE = '_buildspace';
-const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
-const OPENSEA_LINK = '';
-const TOTAL_MINT_COUNT = 50;
+const WEBSITE = 'https://redgraz.vercel.app/';
 const goerliChainId = "0x5"; 
 
 const CONTRACT_ADDRESS = "0x81927EC8E60AB44D1BE4319832cB226389cE6cAa";
 
 const App = () => {
   const [currentAccount, setCurrentAccount] = useState("");
-  const checkIfWalletIsConnected = async () => {
-    const { ethereum } = window;
-
-    if (!ethereum) {
-      console.log("Connect your memtamask!");
-      return;
-    } else {
-      console.log("We have the ethereum object", ethereum);
-    }
-
-    let chainId = await ethereum.request({ method: 'eth_chainId' });
-    console.log("Connected to chain " + chainId);
-
-    if (chainId !== goerliChainId) {
-      alert("You are not connected to the Goerli Test Network!");
-    } else {
-      const accounts = await ethereum.request({ method: 'eth_accounts' });
-
-      if (accounts.length !== 0) {
-        const account = accounts[0];
-        console.log("Found an authorized account: ", account);
-        setCurrentAccount(account);
-        setupEventListener();
-      } else {
-        console.log("No authorized account detected");
-      }
-    }   
-  }
 
   const connectWallet = async () => {
     try {
@@ -136,27 +107,56 @@ const App = () => {
   );
 
   useEffect(() => {
+    const checkIfWalletIsConnected = async () => {
+      const { ethereum } = window;
+  
+      if (!ethereum) {
+        console.log("Connect your memtamask!");
+        return;
+      } else {
+        console.log("We have the ethereum object", ethereum);
+      }
+  
+      let chainId = await ethereum.request({ method: 'eth_chainId' });
+      console.log("Connected to chain " + chainId);
+  
+      if (chainId !== goerliChainId) {
+        alert("You are not connected to the Goerli Test Network!");
+      } else {
+        const accounts = await ethereum.request({ method: 'eth_accounts' });
+  
+        if (accounts.length !== 0) {
+          const account = accounts[0];
+          console.log("Found an authorized account: ", account);
+          setCurrentAccount(account);
+          setupEventListener();
+        } else {
+          console.log("No authorized account detected");
+        }
+      }   
+    }
     checkIfWalletIsConnected();
   }, [])
 
   return (
-    <div className="App">
-      <div className="container">
-        <div className="header-container">
-          <p className="header gradient-text">My NFT Collection</p>
+    <div className="App">    
+      <div className="container">   
+        <div className="header-container">  
+        <Spinner animation="border" variant="success"/>   
+          <p className="header gradient-text">Random NFTs 💎</p>
           <p className="sub-text">
-            Each unique. Each beautiful. Discover your NFT today.
+           ✨Each unique. Each beautiful. Discover your NFT today✨
           </p>
           {currentAccount === "" ? renderNotConnectedContainer() : renderMintUI()}
         </div>
         <div className="footer-container">
-          <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
+          <img alt="Profile" className="profile" src={profile} />
           <a
             className="footer-text"
-            href={TWITTER_LINK}
+            href={WEBSITE}
             target="_blank"
             rel="noreferrer"
-          >{`built on @${TWITTER_HANDLE}`}</a>
+          >{'built by RedGraz'}</a>
         </div>
       </div>
     </div>

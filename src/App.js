@@ -13,12 +13,16 @@ const CONTRACT_ADDRESS = "0x81927EC8E60AB44D1BE4319832cB226389cE6cAa";
 
 const App = () => {
   const [currentAccount, setCurrentAccount] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [mintedNftCount, setMintedNftCount] = useState(0);
 
   const connectWallet = async () => {
     try {
+      setLoading(true); 
       const { ethereum } = window;
       if (!ethereum) {
         alert("Get Metamask!");
+        setLoading(false); 
         return;
       }
 
@@ -26,14 +30,17 @@ const App = () => {
       console.log("Connected to chain " + chainId);
 
       if (chainId !== goerliChainId) {
+        setLoading(false); 
         alert("You are not connected to the Goerli Test Network!");
       } else {
         const accounts = await ethereum.request({ method: "eth_requestAccounts"});
         console.log("Connected with account: ", accounts[0]);
         setCurrentAccount(accounts[0]);
+        setLoading(false); 
         setupEventListener();
       }      
     } catch (error) {
+      setLoading(false); 
       console.log(error); 
     }
   }
@@ -68,6 +75,7 @@ const App = () => {
       const { ethereum } = window;
 
       if (ethereum) {
+        setLoading(true);
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
         const connectedContract = new ethers.Contract(CONTRACT_ADDRESS, myEpicNft.abi, signer);
@@ -78,32 +86,44 @@ const App = () => {
         if (chainId !== goerliChainId) {
           alert("You are not connected to the Goerli Test Network!");
         } else {
+          let nftCount = await connectedContract.getTotalNFTsMintedSoFar();
+          console.log("NFT count: ",Number(nftCount));
+          setMintedNftCount(Number(nftCount));
           console.log("Going to pop wallet now to pay gas...");
           let nftTxn = await connectedContract.makeAnEpicNFT();
 
           console.log("Mining... please wait");
-          await nftTxn.wait();
-
+          await nftTxn.wait();         
           console.log(`Mined, see transaction: https://goerli.etherscan.io/tx/${nftTxn.hash}`);
-        }      
+
+          nftCount = await connectedContract.getTotalNFTsMintedSoFar();
+          console.log("NFT count: ",Number(nftCount));
+          setMintedNftCount(Number(nftCount));
+        } 
+        setLoading(false);     
       } else {
         console.log("Ethereum object doesn't exist!");
       }
     } catch (error) {
+      setLoading(false); 
       console.log(error);
     }
   }
 
   const renderNotConnectedContainer = () => (
-    <button onClick={connectWallet} className="cta-button connect-wallet-button">
+    <button key="Connect" onClick={connectWallet} className="cta-button connect-wallet-button">
       Connect Your Wallet
     </button>
   );
 
   const renderMintUI = () => (
-    <button onClick={askContractToMintNft} className="cta-button connect-wallet-button">
+    <button key="Mint" onClick={askContractToMintNft} className="cta-button connect-wallet-button">
       Mint NFT
     </button>
+  );
+
+  const loadingSpinner = () => (
+    <Spinner key="Spin" animation="border" variant="success"/> 
   );
 
   useEffect(() => {
@@ -141,14 +161,17 @@ const App = () => {
   return (
     <div className="App">    
       <div className="container">   
-        <div className="header-container">  
-        <Spinner animation="border" variant="success"/>   
+        <div className="header-container">    
           <p className="header gradient-text">Random NFTs 💎</p>
           <p className="sub-text">
            ✨Each unique. Each beautiful. Discover your NFT today✨
           </p>
-          {currentAccount === "" ? renderNotConnectedContainer() : renderMintUI()}
+          {currentAccount === "" ? 
+            [loading ? loadingSpinner() : renderNotConnectedContainer()] : 
+            [loading ? loadingSpinner() : renderMintUI()]}
         </div>
+        {mintedNftCount === 0 ? null :
+        (<p className="header gradient-text2"> {mintedNftCount} out of 50 minted</p>)}
         <div className="footer-container">
           <img alt="Profile" className="profile" src={profile} />
           <a

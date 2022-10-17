@@ -35,6 +35,13 @@
   -webkit-text-fill-color: transparent;
 }
 
+.gradient-text2 {
+  background: -webkit-linear-gradient(left, #c65778 30%, #35aee2 60%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .cta-button {
   height: 45px;
   border: 0;
@@ -79,6 +86,9 @@
 }
 
 .profile {
+  border-style: solid;
+  border-color: #0d1116;
+  border-width: thick;
   width: 35px;
   height: 35px;
 }

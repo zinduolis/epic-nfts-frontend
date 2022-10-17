@@ -8,8 +8,9 @@ const TWITTER_HANDLE = '_buildspace';
 const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
 const OPENSEA_LINK = '';
 const TOTAL_MINT_COUNT = 50;
+const goerliChainId = "0x5"; 
 
-const CONTRACT_ADDRESS = "0x16a2E4eB093d3460Ae518ec88A4B6CE7992DdD48";
+const CONTRACT_ADDRESS = "0x81927EC8E60AB44D1BE4319832cB226389cE6cAa";
 
 const App = () => {
   const [currentAccount, setCurrentAccount] = useState("");
@@ -23,16 +24,23 @@ const App = () => {
       console.log("We have the ethereum object", ethereum);
     }
 
-    const accounts = await ethereum.request({ method: 'eth_accounts' });
+    let chainId = await ethereum.request({ method: 'eth_chainId' });
+    console.log("Connected to chain " + chainId);
 
-    if (accounts.length !== 0) {
-      const account = accounts[0];
-      console.log("Found an authorized account: ", account);
-      setCurrentAccount(account);
-      setupEventListener();
+    if (chainId !== goerliChainId) {
+      alert("You are not connected to the Goerli Test Network!");
     } else {
-      console.log("No authorized account detected");
-    }
+      const accounts = await ethereum.request({ method: 'eth_accounts' });
+
+      if (accounts.length !== 0) {
+        const account = accounts[0];
+        console.log("Found an authorized account: ", account);
+        setCurrentAccount(account);
+        setupEventListener();
+      } else {
+        console.log("No authorized account detected");
+      }
+    }   
   }
 
   const connectWallet = async () => {
@@ -43,10 +51,17 @@ const App = () => {
         return;
       }
 
-      const accounts = await ethereum.request({ method: "eth_requestAccounts"});
-      console.log("Connected with account: ", accounts[0]);
-      setCurrentAccount(accounts[0]);
-      setupEventListener();
+      let chainId = await ethereum.request({ method: 'eth_chainId' });
+      console.log("Connected to chain " + chainId);
+
+      if (chainId !== goerliChainId) {
+        alert("You are not connected to the Goerli Test Network!");
+      } else {
+        const accounts = await ethereum.request({ method: "eth_requestAccounts"});
+        console.log("Connected with account: ", accounts[0]);
+        setCurrentAccount(accounts[0]);
+        setupEventListener();
+      }      
     } catch (error) {
       console.log(error); 
     }
@@ -86,13 +101,20 @@ const App = () => {
         const signer = provider.getSigner();
         const connectedContract = new ethers.Contract(CONTRACT_ADDRESS, myEpicNft.abi, signer);
 
-        console.log("Going to pop wallet now to pay gas...");
-        let nftTxn = await connectedContract.makeAnEpicNFT();
+        let chainId = await ethereum.request({ method: 'eth_chainId' });
+        console.log("Connected to chain " + chainId);
 
-        console.log("Mining... please wait");
-        await nftTxn.wait();
+        if (chainId !== goerliChainId) {
+          alert("You are not connected to the Goerli Test Network!");
+        } else {
+          console.log("Going to pop wallet now to pay gas...");
+          let nftTxn = await connectedContract.makeAnEpicNFT();
 
-        console.log(`Mined, see transaction: https://goerli.etherscan.io/tx/${nftTxn.hash}`);
+          console.log("Mining... please wait");
+          await nftTxn.wait();
+
+          console.log(`Mined, see transaction: https://goerli.etherscan.io/tx/${nftTxn.hash}`);
+        }      
       } else {
         console.log("Ethereum object doesn't exist!");
       }
@@ -107,11 +129,11 @@ const App = () => {
     </button>
   );
 
-  const renderMintUI = () => {
+  const renderMintUI = () => (
     <button onClick={askContractToMintNft} className="cta-button connect-wallet-button">
       Mint NFT
     </button>
-  }
+  );
 
   useEffect(() => {
     checkIfWalletIsConnected();

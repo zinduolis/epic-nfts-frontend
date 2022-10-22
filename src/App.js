@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from 'axios';
 import './styles/App.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import Spinner from 'react-bootstrap/Spinner';
@@ -7,9 +8,10 @@ import { ethers } from "ethers";
 import myEpicNft from './utils/MyEpicNFT.json';
 
 const WEBSITE = 'https://redgraz.vercel.app/';
+const nftGenerateAPI = 'https://pinata-uploadfile.vercel.app/nft';
 const goerliChainId = "0x5"; 
 
-const CONTRACT_ADDRESS = "0x81927EC8E60AB44D1BE4319832cB226389cE6cAa";
+const CONTRACT_ADDRESS = "0x6E71599bfaC67F72f1a5ac2A4193D4Cd91Dea40c";
 
 const App = () => {
   const [currentAccount, setCurrentAccount] = useState("");
@@ -90,8 +92,10 @@ const App = () => {
           console.log("NFT count: ",Number(nftCount));
           setMintedNftCount(Number(nftCount));
           console.log("Going to pop wallet now to pay gas...");
-          let nftTxn = await connectedContract.makeAnEpicNFT();
-
+          let generateNft = await axios.get(nftGenerateAPI);    
+          console.log("nftJson: ", generateNft.data.json);
+          let nftTxn = await connectedContract.makeRandomNFTFromIPFS(generateNft.data.json);
+          
           console.log("Mining... please wait");
           await nftTxn.wait();         
           console.log(`Mined, see transaction: https://goerli.etherscan.io/tx/${nftTxn.hash}`);
@@ -119,12 +123,29 @@ const App = () => {
   const renderMintUI = () => (
     <button key="Mint" onClick={askContractToMintNft} className="cta-button connect-wallet-button">
       Mint NFT
-    </button>
+    </button>  
   );
 
   const loadingSpinner = () => (
     <Spinner key="Spin" animation="border" variant="success"/> 
   );
+
+//   const retrieveNftData = async () => {
+//         try {
+          
+//           axios.get(nftGenerateAPI)
+//          .then(res => {
+//           const nftData = res.data.image;
+//           console.log(nftData); 
+//         })
+
+//           // const ImgHash = `ipfs://${resFile.data.IpfsHash}`;
+
+//         } catch (error) {
+//             console.log("Error sending File to IPFS: ")
+//             console.log(error)
+//         }
+// }
 
   useEffect(() => {
     const checkIfWalletIsConnected = async () => {

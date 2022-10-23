@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from 'axios';
 import './styles/App.css';
+import { Button, Card } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 import Spinner from 'react-bootstrap/Spinner';
 import profile from './assets/profilepic.webp';
@@ -17,6 +18,7 @@ const App = () => {
   const [currentAccount, setCurrentAccount] = useState("");
   const [loading, setLoading] = useState(false);
   const [mintedNftCount, setMintedNftCount] = useState(0);
+  const [imageArray, setImageArray] = useState([{}]);
 
   const connectWallet = async () => {
     try {
@@ -93,7 +95,7 @@ const App = () => {
           setMintedNftCount(Number(nftCount));
           console.log("Going to pop wallet now to pay gas...");
           let generateNft = await axios.get(nftGenerateAPI);    
-          console.log("nftJson: ", generateNft.data.json);
+          console.log("Generate NFT JSON: ", generateNft.data.json);
           let nftTxn = await connectedContract.makeRandomNFTFromIPFS(generateNft.data.json);
           
           console.log("Mining... please wait");
@@ -103,6 +105,19 @@ const App = () => {
           nftCount = await connectedContract.getTotalNFTsMintedSoFar();
           console.log("NFT count: ",Number(nftCount));
           setMintedNftCount(Number(nftCount));
+
+          let tokenData = [];
+          for (let i = 0; i < nftCount; i++){
+            let nftJsonAddress = await connectedContract.tokenURI(i);
+            let nftOwner = await connectedContract.ownerOf(i);
+            // console.log("JSON address: ", nftJsonAddress);
+            let nftJson = await axios.get(nftJsonAddress);
+            // console.log("image: ", nftJson.data.image);
+            console.log("Owner of this NFT: ", nftOwner);
+            tokenData.push({tokenid: i, image: nftJson.data.image, owner: nftOwner});
+          }
+          console.log("Token data: ", tokenData);
+          setImageArray(tokenData);
         } 
         setLoading(false);     
       } else {
@@ -123,29 +138,12 @@ const App = () => {
   const renderMintUI = () => (
     <button key="Mint" onClick={askContractToMintNft} className="cta-button connect-wallet-button">
       Mint NFT
-    </button>  
+    </button> 
   );
 
   const loadingSpinner = () => (
     <Spinner key="Spin" animation="border" variant="success"/> 
   );
-
-//   const retrieveNftData = async () => {
-//         try {
-          
-//           axios.get(nftGenerateAPI)
-//          .then(res => {
-//           const nftData = res.data.image;
-//           console.log(nftData); 
-//         })
-
-//           // const ImgHash = `ipfs://${resFile.data.IpfsHash}`;
-
-//         } catch (error) {
-//             console.log("Error sending File to IPFS: ")
-//             console.log(error)
-//         }
-// }
 
   useEffect(() => {
     const checkIfWalletIsConnected = async () => {
@@ -181,7 +179,7 @@ const App = () => {
 
   return (
     <div className="App">    
-      <div className="container">   
+      <div className="container">  
         <div className="header-container">    
           <p className="header gradient-text">Random NFTs 💎</p>
           <p className="sub-text">
@@ -193,6 +191,25 @@ const App = () => {
         </div>
         {mintedNftCount === 0 ? null :
         (<p className="header gradient-text2"> {mintedNftCount} out of 50 minted</p>)}
+        <div className="row items mt-3">
+        {imageArray.map(result => {
+          return(          
+            <Card style={{ width: '18rem'}}>
+              {result.image && (<>
+              <Card.Img variant="top" src={result.image} />
+              <Card.Body>
+                <Card.Title>Random Word Collection NFT #{result.tokenid}</Card.Title>
+                <Card.Text>
+                  Owner Wallet: #{result.owner}
+                  Token on rarible: https://testnet.rarible.com/token/{CONTRACT_ADDRESS}:{result.tokenid}
+                </Card.Text>
+                <Button variant="primary">Don't Click it</Button>
+              </Card.Body> </>)}
+          </Card>         
+          )}
+        )}       
+        </div>
+        
         <div className="footer-container">
           <img alt="Profile" className="profile" src={profile} />
           <a

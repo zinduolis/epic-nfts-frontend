@@ -12,7 +12,7 @@ const WEBSITE = 'https://redgraz.vercel.app/';
 const nftGenerateAPI = 'https://pinata-uploadfile.vercel.app/nft';
 const goerliChainId = "0x5"; 
 
-const CONTRACT_ADDRESS = "0x6E71599bfaC67F72f1a5ac2A4193D4Cd91Dea40c";
+const CONTRACT_ADDRESS = "0xe73dA558adF46771Ab27927300C6a216F8dc008e";
 
 const App = () => {
   const [currentAccount, setCurrentAccount] = useState("");
@@ -60,7 +60,7 @@ const App = () => {
 
         connectedContract.on("NewEpicNFTMinted", (from, tokenId) => {
           console.log(from, tokenId.toNumber());
-          alert(`Hey there! We've minted your NFT and sent it to your wallet. It may be blank right now. It can take max of 10 min to show up on Rarible. Here's the link: https://testnet.rarible.com/token/${CONTRACT_ADDRESS}:${tokenId.toNumber()}`);
+          alert(`Hey, your NFT has been minted and will show up here after you click ok and wait a minute. You can also see it here: https://testnet.rarible.com/token/${CONTRACT_ADDRESS}:${tokenId.toNumber()}`);
         });
 
         console.log("Setup event Listener!");
@@ -113,7 +113,7 @@ const App = () => {
             // console.log("JSON address: ", nftJsonAddress);
             let nftJson = await axios.get(nftJsonAddress);
             // console.log("image: ", nftJson.data.image);
-            console.log("Owner of this NFT: ", nftOwner);
+            // console.log("Owner of this NFT: ", nftOwner);
             tokenData.push({tokenid: i, image: nftJson.data.image, owner: nftOwner});
           }
           console.log("Token data: ", tokenData);
@@ -142,8 +142,12 @@ const App = () => {
   );
 
   const loadingSpinner = () => (
-    <Spinner key="Spin" animation="border" variant="success"/> 
+    <Spinner key="Spin" animation="border" variant="success" />
   );
+
+  const dontClick = () => {
+    alert("Why did you click what's forbidden? 🤗");
+  }
 
   useEffect(() => {
     const checkIfWalletIsConnected = async () => {
@@ -185,6 +189,7 @@ const App = () => {
           <p className="sub-text">
            ✨Each unique. Each beautiful. Discover your NFT today✨
           </p>
+          <p className="token-link">Smart Contract ID: {CONTRACT_ADDRESS}</p>
           {currentAccount === "" ? 
             [loading ? loadingSpinner() : renderNotConnectedContainer()] : 
             [loading ? loadingSpinner() : renderMintUI()]}
@@ -193,19 +198,21 @@ const App = () => {
         (<p className="header gradient-text2"> {mintedNftCount} out of 50 minted</p>)}
         <div className="row items mt-3">
         {imageArray.map(result => {
-          return(          
-            <Card style={{ width: '18rem'}}>
-              {result.image && (<>
-              <Card.Img variant="top" src={result.image} />
-              <Card.Body>
-                <Card.Title>Random Word Collection NFT #{result.tokenid}</Card.Title>
-                <Card.Text>
-                  Owner Wallet: #{result.owner}
-                  Token on rarible: https://testnet.rarible.com/token/{CONTRACT_ADDRESS}:{result.tokenid}
-                </Card.Text>
-                <Button variant="primary">Don't Click it</Button>
-              </Card.Body> </>)}
-          </Card>         
+          return( 
+            <>    
+            {result.image && (                    
+              <Card style={{ width: '14rem'}}>               
+                <Card.Header></Card.Header>
+                <Card.Img variant="top" src={result.image} />
+                <Card.Body>
+                  <Card.Title>NFT #{result.tokenid}</Card.Title>
+                  <Card.Text>
+                    Owner Wallet: #{result.owner}
+                  </Card.Text>
+                  <Button variant="danger" onClick={dontClick}>Don't Click</Button>
+                </Card.Body> 
+              </Card> )}
+            </>      
           )}
         )}       
         </div>
